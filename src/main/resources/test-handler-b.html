@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>WebSocket с авторизацией и комнатами</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 20px;
+      }
+      #log {
+        white-space: pre-wrap;
+        background: #f0f0f0;
+        padding: 10px;
+        border-radius: 5px;
+        max-height: 300px;
+        overflow-y: auto;
+      }
+      input,
+      select,
+      button {
+        margin-top: 10px;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>WebSocket: Авторизация + Комнаты</h1>
+
+    <label>Токен авторизации:</label>
+    <input
+      type="text"
+      id="tokenInput"
+      placeholder="Введите токен (например, JWT)"
+    />
+
+    <label>Выберите комнату:</label>
+    <select id="roomSelect">
+      <option value="room1">Комната 1</option>
+      <option value="room2">Комната 2</option>
+      <option value="room3">Комната 3</option>
+    </select>
+
+    <button onclick="connect()">Подключиться</button>
+    <button onclick="closeWebSocket()">Закрыть соединение</button>
+
+    <hr />
+
+    <input type="text" id="messageInput" placeholder="Введите сообщение" />
+    <button onclick="sendMessage()">Отправить</button>
+
+    <div id="log"></div>
+
+    <script>
+      let socket;
+
+      const log = (msg) => {
+        document.getElementById("log").textContent += msg + "\n";
+      };
+
+      function closeWebSocket() {
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          console.log("🔌 Закрываю WebSocket-соединение...");
+          socket.close(1000, "Клиент завершил соединение"); // 1000 — нормальное завершение
+        } else if (socket && socket.readyState === WebSocket.CLOSING) {
+          console.log("⏳ Соединение уже закрывается...");
+        } else if (socket && socket.readyState === WebSocket.CLOSED) {
+          console.log("❌ Соединение уже закрыто.");
+        } else {
+          console.log(
+            "⚠️ WebSocket не инициализирован или в состоянии CONNECTING."
+          );
+        }
+      }
+
+      function connect() {
+        const token = document.getElementById("tokenInput").value.trim();
+        const room = document.getElementById("roomSelect").value;
+
+        if (!token) {
+          log("⚠️ Введите токен авторизации");
+          return;
+        }
+
+        const url = `ws://localhost:8080/handler-b?token=${encodeURIComponent(
+          token
+        )}&room=${encodeURIComponent(room)}`;
+
+        socket = new WebSocket(url);
+        socket.onopen = () => log(`✅ Подключено к комнате "${room}"`);
+        socket.onmessage = (event) => log("📨 Ответ от сервера: " + event.data);
+        socket.onerror = (error) =>
+          log("❌ Ошибка WebSocket: " + error.message);
+        socket.onclose = () => log("🔒 Соединение закрыто");
+      }
+
+      function sendMessage() {
+        const input = document.getElementById("messageInput");
+        const message = input.value;
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(message);
+          input.value = "";
+        } else {
+          log("⚠️ Соединение не открыто");
+        }
+      }
+    </script>
+  </body>
+</html>
