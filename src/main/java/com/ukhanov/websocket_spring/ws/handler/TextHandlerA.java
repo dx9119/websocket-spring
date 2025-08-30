@@ -1,4 +1,4 @@
-package com.ukhanov.websocket_spring.handler;
+package com.ukhanov.websocket_spring.ws.handler;
 
 import org.springframework.web.socket.*;
 import org.springframework.web.socket.handler.TextWebSocketHandler;

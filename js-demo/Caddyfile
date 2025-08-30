@@ -1,0 +1,10 @@
+https://app.local:8443 {
+    tls internal
+    root * ./sockjs
+    file_server
+}
+
+https://api.local:8443 {
+    tls internal
+    reverse_proxy localhost:8080
+}

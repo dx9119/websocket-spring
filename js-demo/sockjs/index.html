@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <title>WebSocket через SockJS (без STOMP)</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 20px;
+        background-color: #f4f7f9;
+        color: #333;
+      }
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        text-align: center;
+        color: #2c3e50;
+      }
+      #log {
+        white-space: pre-wrap;
+        background: #ecf0f1;
+        padding: 10px;
+        border-radius: 5px;
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #bdc3c7;
+        margin-top: 20px;
+        font-family: monospace;
+      }
+      input,
+      select,
+      button {
+        margin-top: 10px;
+        display: block;
+        width: 100%;
+        padding: 10px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        box-sizing: border-box; /* Важно для правильного рендеринга padding и width */
+      }
+      button {
+        background-color: #3498db;
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s;
+      }
+      button:hover {
+        background-color: #2980b9;
+      }
+      button.danger {
+        background-color: #e74c3c;
+      }
+      button.danger:hover {
+        background-color: #c0392b;
+      }
+      hr {
+        border: 0;
+        height: 1px;
+        background: #ddd;
+        margin: 20px 0;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>WebSocket через SockJS (Авторизация + Комнаты)</h1>
+
+      <label for="tokenInput">Токен авторизации:</label>
+      <input
+        type="text"
+        id="tokenInput"
+        placeholder="Введите токен (например, JWT)"
+        value="some-test-jwt-token"
+      />
+
+      <label for="roomSelect">Выберите комнату:</label>
+      <select id="roomSelect">
+        <option value="room1">Комната 1</option>
+        <option value="room2">Комната 2</option>
+        <option value="room3">Комната 3</option>
+      </select>
+
+      <button onclick="connect()">Подключиться</button>
+      <button onclick="closeWebSocket()" class="danger">
+        Закрыть соединение
+      </button>
+
+      <hr />
+
+      <input type="text" id="messageInput" placeholder="Введите сообщение" />
+      <button onclick="sendMessage()">Отправить</button>
+
+      <div id="log"></div>
+    </div>
+
+    <script>
+      let socket;
+
+      const log = (msg) => {
+        const logEl = document.getElementById("log");
+        logEl.textContent += msg + "\n";
+        logEl.scrollTop = logEl.scrollHeight; // Автопрокрутка вниз
+      };
+
+      function closeWebSocket() {
+        if (socket && socket.readyState === SockJS.OPEN) {
+          log("🔌 Закрываю SockJS-соединение...");
+          socket.close();
+        } else if (socket && socket.readyState === SockJS.CLOSING) {
+          log("⏳ Соединение уже закрывается...");
+        } else if (socket && socket.readyState === SockJS.CLOSED) {
+          log("❌ Соединение уже закрыто.");
+        } else {
+          log("⚠️ SockJS не инициализирован или в состоянии CONNECTING.");
+        }
+      }
+
+      function connect() {
+        if (socket && socket.readyState === SockJS.OPEN) {
+          log("ℹ️ Вы уже подключены. Сначала закройте текущее соединение.");
+          return;
+        }
+
+        const token = document.getElementById("tokenInput").value.trim();
+        const room = document.getElementById("roomSelect").value;
+
+        if (!token) {
+          log("⚠️ Введите токен авторизации");
+          return;
+        }
+
+        const url = `https://api.local:8080/handler-sock-js?token=${encodeURIComponent(
+          token
+        )}&room=${encodeURIComponent(room)}`;
+
+        log(`🔌 Попытка подключения к ${url}`);
+        socket = new SockJS(url);
+
+        socket.onopen = () => log(`✅ Подключено к комнате "${room}"`);
+        socket.onmessage = (event) => log("📨 Ответ от сервера: " + event.data);
+        socket.onerror = (error) =>
+          log("❌ Ошибка SockJS: " + JSON.stringify(error));
+        socket.onclose = (e) =>
+          log(`🔒 Соединение закрыто. Код: ${e.code}, причина: ${e.reason}`);
+      }
+
+      function sendMessage() {
+        const input = document.getElementById("messageInput");
+        const message = input.value;
+        if (socket && socket.readyState === SockJS.OPEN) {
+          log(`✉️ Отправка: ${message}`);
+          socket.send(message);
+          input.value = "";
+        } else {
+          log("⚠️ Соединение не открыто");
+        }
+      }
+
+      // Обработка отправки по Enter
+      document
+        .getElementById("messageInput")
+        .addEventListener("keyup", function (event) {
+          if (event.key === "Enter") {
+            sendMessage();
+          }
+        });
+    </script>
+  </body>
+</html>

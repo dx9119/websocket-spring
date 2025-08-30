@@ -1,4 +1,4 @@
-package com.ukhanov.websocket_spring.interceptor;
+package com.ukhanov.websocket_spring.ws.interceptor;
 
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -25,6 +25,7 @@ public class CustomInterceptor implements HandshakeInterceptor {
         Map<String, String> params = parseQueryParams(query);
         String token = params.get("token");
 
+        //можно контролировать и заголовки
         if (!isValidToken(token)) {
             System.out.println("Неверный токен: " + token);
             return false;
