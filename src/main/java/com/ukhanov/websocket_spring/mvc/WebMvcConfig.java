@@ -1,4 +1,4 @@
-package com.ukhanov.websocket_spring;
+package com.ukhanov.websocket_spring.mvc;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;

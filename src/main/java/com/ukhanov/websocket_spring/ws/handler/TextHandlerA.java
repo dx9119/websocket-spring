@@ -16,7 +16,7 @@ public class TextHandlerA extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        String room = (String) session.getAttributes().get("room"); //забераем из атрибута комнату к которой относится пользователь
+        String room = (String) session.getAttributes().get("room"); //забираем из атрибута комнату к которой относится пользователь
         if (room == null) {
             session.sendMessage(new TextMessage("Вы не подключены к комнате"));
             return;

@@ -26,23 +26,8 @@ public class WebSocketConfig implements WebSocketConfigurer {
                 .addInterceptors(new CustomInterceptor())
                 .setAllowedOrigins("*");
 
-        registry.addHandler(handlerDefault(), "/handler-sock-js")
-                .setAllowedOrigins("https://app.local:8443")
-                .addInterceptors(new HttpSessionHandshakeInterceptor())
-                .withSockJS()
-                .setHeartbeatTime(15000)
-                .setTaskScheduler(sockJsTaskScheduler());
 
-    }
 
-    // Настройка TaskScheduler для heartbeat'ов и других задач SockJS
-    @Bean
-    public ThreadPoolTaskScheduler sockJsTaskScheduler() {
-        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-        scheduler.setPoolSize(4); // 🔧 Количество потоков — настрой под нагрузку
-        scheduler.setThreadNamePrefix("SockJS-Heartbeat-");
-        scheduler.initialize();
-        return scheduler;
     }
 
     @Bean
